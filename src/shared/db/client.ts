@@ -40,10 +40,11 @@ async function runSchema(db: DbClient): Promise<void> {
 
 async function createNeonClient(connectionString: string): Promise<DbClient> {
   const { Pool, neonConfig } = await import('@neondatabase/serverless')
-  // Node no expone WebSocket en todos los entornos donde corre Next:
-  // el driver lo necesita para transacciones interactivas
-  if (typeof WebSocket !== 'undefined') {
-    neonConfig.webSocketConstructor = WebSocket as never
+  // El Pool de Neon usa WebSockets para las transacciones interactivas.
+  // Node 22+ trae WebSocket global; en versiones previas recurrimos a `ws`.
+  if (typeof WebSocket === 'undefined') {
+    const ws = (await import('ws')).default
+    neonConfig.webSocketConstructor = ws as never
   }
   const pool = new Pool({ connectionString })
 
