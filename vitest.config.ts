@@ -5,6 +5,9 @@ export default defineConfig({
   test: {
     include: ['src/**/*.test.ts'],
     environment: 'node',
+    // La primera consulta de cada archivo arranca PGlite (Postgres en WASM);
+    // con varios archivos en paralelo ese arranque puede pasar de 5 s
+    testTimeout: 20000,
   },
   resolve: {
     alias: {

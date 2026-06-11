@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/features/auth/session'
-import { deleteUser } from '@/features/auth/service'
+import { deleteUser, resetUserPin } from '@/features/auth/service'
 
 interface Body {
-  action?: 'delete'
+  action?: 'delete' | 'reset-pin'
   userId?: number
+  newPin?: string
 }
 
-// Eliminar cuentas es exclusivo del superadmin (no a sí mismo ni a otro superadmin).
+// Eliminar cuentas y resetear PINs es exclusivo del superadmin.
 export async function POST(request: Request) {
   const user = await getSession()
   if (!user?.isSuperadmin) {
@@ -15,14 +16,20 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json().catch(() => ({}))) as Body
-  if (body.action !== 'delete') {
-    return NextResponse.json({ ok: false, error: 'Acción desconocida' }, { status: 400 })
-  }
   const userId = Number(body.userId)
   if (!Number.isInteger(userId)) {
     return NextResponse.json({ ok: false, error: 'Usuario inválido' }, { status: 400 })
   }
 
-  const result = await deleteUser(userId, user.id)
-  return NextResponse.json(result, { status: result.ok ? 200 : 400 })
+  if (body.action === 'reset-pin') {
+    const result = await resetUserPin(userId, String(body.newPin ?? ''))
+    return NextResponse.json(result, { status: result.ok ? 200 : 400 })
+  }
+
+  if (body.action === 'delete') {
+    const result = await deleteUser(userId, user.id)
+    return NextResponse.json(result, { status: result.ok ? 200 : 400 })
+  }
+
+  return NextResponse.json({ ok: false, error: 'Acción desconocida' }, { status: 400 })
 }

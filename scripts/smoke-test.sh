@@ -37,12 +37,12 @@ out=$(post "$SUPER_JAR" /api/admin/sync '{}')
 echo "$out" | head -c 120; echo
 echo "$out" | grep -q '"ok":true' || echo "WARN: sync falló"
 
-step "4b. El catálogo de jugadores se descargó de ESPN"
-html=$(curl -s -b "$SUPER_JAR" "$BASE/premios")
-options=$(echo "$html" | grep -o '<option value="[^"]*·' | wc -l)
-echo "Jugadores en el buscador: $options"
-[ "$options" -gt 1000 ] && echo "Catálogo OK ✓" || { echo "WARN: catálogo corto ($options)"; }
-echo "$html" | grep -qi 'datalist' && echo "Datalist presente ✓" || { echo "FAIL: sin datalist"; fail=1; }
+step "4b. El buscador de jugadores usa combobox propio (no datalist)"
+admin_html=$(curl -s -b "$SUPER_JAR" "$BASE/admin")
+combos=$(echo "$admin_html" | grep -o 'role="combobox"' | wc -l)
+echo "Comboboxes en premios oficiales: $combos"
+[ "$combos" -ge 4 ] && echo "Combobox OK ✓" || { echo "FAIL: sin combobox"; fail=1; }
+curl -s -b "$SUPER_JAR" "$BASE/premios" | grep -qi '<datalist' && { echo "FAIL: quedó un datalist"; fail=1; } || echo "Sin datalist (correcto) ✓"
 
 step "4c. Banderas para (casi) todos los equipos"
 html=$(curl -s -b "$SUPER_JAR" "$BASE/partidos?filtro=all")
@@ -122,6 +122,27 @@ done
 code=$(curl -s -b "$BOSS_JAR" -o /dev/null -w '%{http_code}' "$BASE/admin")
 echo "GET /admin como jefa → $code"
 [ "$code" = "200" ] || fail=1
+
+step "13b. Resetear el PIN de una cuenta (superadmin, userId 2 = juan)"
+out=$(post "$SUPER_JAR" /api/admin/users '{"action":"reset-pin","userId":2,"newPin":"4321"}')
+echo "$out"
+echo "$out" | grep -q '"ok":true' || { echo "FAIL reset-pin"; fail=1; }
+out=$(curl -s -X POST "$BASE/api/auth/login" -H 'Content-Type: application/json' -d '{"username":"juan","pin":"4321"}')
+echo "login con PIN nuevo: $out"
+echo "$out" | grep -q '"ok":true' || { echo "FAIL: el PIN reseteado no funciona"; fail=1; }
+
+step "13c. Cambiar mi propio PIN (verifica el actual)"
+JUAN_JAR="/tmp/polla-juan.txt"; rm -f "$JUAN_JAR"
+curl -s -c "$JUAN_JAR" -X POST "$BASE/api/auth/login" -H 'Content-Type: application/json' -d '{"username":"juan","pin":"4321"}' > /dev/null
+out=$(post "$JUAN_JAR" /api/auth/change-pin '{"currentPin":"0000","newPin":"5555"}')
+echo "actual incorrecto: $out"
+echo "$out" | grep -q '"ok":false' || { echo "FAIL: aceptó PIN actual incorrecto"; fail=1; }
+out=$(post "$JUAN_JAR" /api/auth/change-pin '{"currentPin":"4321","newPin":"5555"}')
+echo "cambio: $out"
+echo "$out" | grep -q '"ok":true' || { echo "FAIL change-pin"; fail=1; }
+out=$(curl -s -X POST "$BASE/api/auth/login" -H 'Content-Type: application/json' -d '{"username":"juan","pin":"5555"}')
+echo "login con PIN cambiado: $out"
+echo "$out" | grep -q '"ok":true' || { echo "FAIL: el PIN cambiado no funciona"; fail=1; }
 
 step "14. Renombrar entrada (superadmin) y reflejarlo en posiciones"
 out=$(post "$SUPER_JAR" /api/entries '{"action":"rename","entryId":2,"name":"Los Galacticos"}')

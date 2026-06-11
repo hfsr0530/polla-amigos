@@ -525,6 +525,48 @@ export async function deleteUser(targetId: number, actingId: number): Promise<De
   })
 }
 
+export interface PinResult {
+  ok: boolean
+  error?: string
+}
+
+/** Un usuario cambia su propio PIN (verificando el actual). */
+export async function changeMyPin(
+  userId: number,
+  currentPin: string,
+  newPin: string
+): Promise<PinResult> {
+  if (!PIN_RE.test(newPin)) {
+    return { ok: false, error: 'El PIN debe ser de 4 a 6 dígitos' }
+  }
+  const db = await getDb()
+  const rows = await db.query<{ pin_hash: string }>('SELECT pin_hash FROM users WHERE id = $1', [
+    userId,
+  ])
+  if (!rows[0]) return { ok: false, error: 'El usuario no existe' }
+  if (!verifyPin(currentPin, rows[0].pin_hash)) {
+    return { ok: false, error: 'PIN actual incorrecto' }
+  }
+  await db.query('UPDATE users SET pin_hash = $1 WHERE id = $2', [hashPin(newPin), userId])
+  return { ok: true }
+}
+
+/**
+ * El superadmin asigna un PIN nuevo a una cuenta (sin borrarla ni perder sus
+ * pronósticos). El permiso se valida en la ruta. El PIN nunca se muestra: solo
+ * se reemplaza el hash.
+ */
+export async function resetUserPin(targetId: number, newPin: string): Promise<PinResult> {
+  if (!PIN_RE.test(newPin)) {
+    return { ok: false, error: 'El PIN debe ser de 4 a 6 dígitos' }
+  }
+  const db = await getDb()
+  const exists = await db.query('SELECT 1 FROM users WHERE id = $1', [targetId])
+  if (exists.length === 0) return { ok: false, error: 'El usuario no existe' }
+  await db.query('UPDATE users SET pin_hash = $1 WHERE id = $2', [hashPin(newPin), targetId])
+  return { ok: true }
+}
+
 export interface UserSummary {
   id: number
   displayName: string

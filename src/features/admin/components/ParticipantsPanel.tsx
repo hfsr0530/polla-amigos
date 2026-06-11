@@ -29,6 +29,8 @@ export function ParticipantsPanel({ entries }: ParticipantsPanelProps) {
   const apiError = useApiError()
   const [editingId, setEditingId] = useState<number | null>(null)
   const [draft, setDraft] = useState('')
+  const [resetUserId, setResetUserId] = useState<number | null>(null)
+  const [pinDraft, setPinDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -76,6 +78,30 @@ export function ParticipantsPanel({ entries }: ParticipantsPanelProps) {
         data.ok ? t('admin.people.deletedUser') : data.error ? apiError(data.error) : t('score.saveError')
       )
       router.refresh()
+    } catch {
+      setMessage(t('score.noConnection'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function resetPin(userId: number) {
+    setBusy(true)
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset-pin', userId, newPin: pinDraft }),
+      })
+      const data = (await res.json()) as { ok: boolean; error?: string }
+      if (!data.ok) {
+        setMessage(data.error ? apiError(data.error) : t('score.saveError'))
+        return
+      }
+      // No recargamos: el PIN no se muestra en ningún lado, solo se reemplazó
+      setMessage(t('admin.people.pinReset'))
+      setResetUserId(null)
+      setPinDraft('')
     } catch {
       setMessage(t('score.noConnection'))
     } finally {
@@ -139,25 +165,68 @@ export function ParticipantsPanel({ entries }: ParticipantsPanelProps) {
               )}
             </div>
 
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <ul className="flex flex-col gap-1.5 text-sm">
               {entry.members.map((m) => (
-                <li key={m.userId} className="flex items-center gap-1.5 text-slate-300">
-                  <span>{m.displayName}</span>
+                <li key={m.userId} className="flex flex-wrap items-center gap-2 text-slate-300">
+                  <span className="font-medium">{m.displayName}</span>
                   {m.isSuperadmin ? (
                     <span className="text-xs text-amber-400">{t('admin.people.superadmin')}</span>
+                  ) : resetUserId === m.userId ? (
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <input
+                        inputMode="numeric"
+                        value={pinDraft}
+                        autoFocus
+                        maxLength={6}
+                        placeholder={t('admin.people.newPinPlaceholder')}
+                        onChange={(e) => setPinDraft(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        className="h-7 w-36 rounded-md border border-slate-700 bg-slate-950 px-2 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        disabled={busy || pinDraft.length < 4}
+                        onClick={() => resetPin(m.userId)}
+                        className="rounded-md bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-slate-950 transition-colors hover:bg-emerald-400 disabled:opacity-50"
+                      >
+                        {t('score.save')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResetUserId(null)
+                          setPinDraft('')
+                        }}
+                        className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-400 hover:text-white"
+                      >
+                        {t('admin.people.cancel')}
+                      </button>
+                    </span>
                   ) : (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => removeUser(m.userId, m.displayName)}
-                      title={t('admin.people.deleteUser')}
-                      className={cn(
-                        'rounded px-1.5 py-0.5 text-xs font-bold text-red-400 transition-colors',
-                        'bg-slate-800 hover:bg-red-500 hover:text-slate-950 disabled:opacity-50'
-                      )}
-                    >
-                      ✕
-                    </button>
+                    <span className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResetUserId(m.userId)
+                          setPinDraft('')
+                          setMessage(null)
+                        }}
+                        className="rounded-md bg-slate-800 px-2 py-0.5 text-xs text-sky-300 transition-colors hover:bg-slate-700"
+                      >
+                        {t('admin.people.resetPin')}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => removeUser(m.userId, m.displayName)}
+                        title={t('admin.people.deleteUser')}
+                        className={cn(
+                          'rounded px-1.5 py-0.5 text-xs font-bold text-red-400 transition-colors',
+                          'bg-slate-800 hover:bg-red-500 hover:text-slate-950 disabled:opacity-50'
+                        )}
+                      >
+                        ✕
+                      </button>
+                    </span>
                   )}
                 </li>
               ))}

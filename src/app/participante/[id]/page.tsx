@@ -12,6 +12,7 @@ import {
 import { getAllTeams } from '@/features/matches/service'
 import { DEFAULT_RULES } from '@/features/scoring/rules'
 import { EntryNameEditor } from '@/features/entries/components/EntryNameEditor'
+import { ChangePinForm } from '@/features/auth/components/ChangePinForm'
 import { LocalTime } from '@/shared/components/LocalTime'
 import { getT } from '@/shared/i18n/server'
 import type { TKey } from '@/shared/i18n/dictionary'
@@ -78,8 +79,9 @@ export default async function EntryPage({ params }: { params: Promise<{ id: stri
             <p className="mt-0.5 text-sm text-slate-400">{members.join(' + ')}</p>
           )}
           {isSelf && (
-            <div className="mt-1.5">
+            <div className="mt-1.5 flex flex-col items-start gap-1.5">
               <EntryNameEditor entryId={entry.id} currentName={entry.name} />
+              <ChangePinForm />
             </div>
           )}
         </div>
