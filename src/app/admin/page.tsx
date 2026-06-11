@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/features/auth/session'
 import { getUserMemberships, listUsers } from '@/features/auth/service'
-import { listEntriesWithMembers, countEntryMembers } from '@/features/entries/service'
+import { countEntryMembers, listEntriesWithMemberAccounts } from '@/features/entries/service'
 import { listInviteStatuses } from '@/features/invites/service'
 import { getPolla, listPollasWithStats } from '@/features/pollas/service'
 import { getAllMatches, getAllTeams } from '@/features/matches/service'
@@ -14,6 +14,7 @@ import { PollasPanel, type PollaView } from '@/features/admin/components/PollasP
 import { ManualResultForm } from '@/features/admin/components/ManualResultForm'
 import { OfficialAwardsPanel } from '@/features/admin/components/OfficialAwardsPanel'
 import { PickOverrideButtons } from '@/features/admin/components/PickOverrideButtons'
+import { ParticipantsPanel } from '@/features/admin/components/ParticipantsPanel'
 import { getT } from '@/shared/i18n/server'
 import type { TKey } from '@/shared/i18n/dictionary'
 import { PLAYER_AWARDS, type AwardKey } from '@/shared/types/domain'
@@ -32,7 +33,7 @@ export default async function AdminPage() {
     getT(),
     getPolla(user.pollaId),
     listInviteStatuses(user.pollaId),
-    listEntriesWithMembers(user.pollaId),
+    listEntriesWithMemberAccounts(user.pollaId),
     listUsers(user.pollaId),
     getAllAwardPicks(user.pollaId),
     getAwardResults(),
@@ -48,7 +49,6 @@ export default async function AdminPage() {
     usedBy: i.usedBy,
   }))
   const entryNameById = new Map(entries.map((e) => [e.id, e.name]))
-  const entryByUser = new Map(users.map((u) => [u.id, entryNameById.get(u.entryId) ?? '—']))
 
   // Datos del torneo: solo el superadmin los gestiona
   const [status, matches, teams, pollaStats, myMemberships, players, playersCount] =
@@ -260,20 +260,18 @@ export default async function AdminPage() {
       </section>
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-5">
-        <h2 className="mb-2 text-base font-bold">
+        <h2 className="mb-1 text-base font-bold">
           {t('admin.people.title', { entries: entries.length, users: users.length })}
         </h2>
-        <ul className="grid grid-cols-1 gap-1.5 text-sm sm:grid-cols-2">
-          {users.map((u) => (
-            <li key={u.id} className="truncate text-slate-300">
-              {u.displayName}
-              <span className="text-xs text-slate-500"> → {entryByUser.get(u.id)}</span>
-              {u.isSuperadmin && (
-                <span className="ml-1 text-xs text-amber-400">{t('admin.people.superadmin')}</span>
-              )}
-            </li>
-          ))}
-        </ul>
+        <p className="mb-3 text-xs text-slate-500">{t('admin.people.hint')}</p>
+        <ParticipantsPanel
+          entries={entries.map((e) => ({
+            id: e.id,
+            name: e.name,
+            kind: e.kind,
+            members: e.members,
+          }))}
+        />
       </section>
     </div>
   )

@@ -123,5 +123,33 @@ code=$(curl -s -b "$BOSS_JAR" -o /dev/null -w '%{http_code}' "$BASE/admin")
 echo "GET /admin como jefa → $code"
 [ "$code" = "200" ] || fail=1
 
+step "14. Renombrar entrada (superadmin) y reflejarlo en posiciones"
+out=$(post "$SUPER_JAR" /api/entries '{"action":"rename","entryId":2,"name":"Los Galacticos"}')
+echo "$out"
+echo "$out" | grep -q '"ok":true' || { echo "FAIL rename"; fail=1; }
+curl -s -b "$SUPER_JAR" "$BASE/posiciones" | grep -q 'Los Galacticos' && echo "Rename visible ✓" || { echo "FAIL: rename no visible"; fail=1; }
+
+step "15. No puedes eliminar tu propia cuenta"
+out=$(post "$SUPER_JAR" /api/admin/users '{"action":"delete","userId":1}')
+echo "$out"
+echo "$out" | grep -q '"ok":false' || { echo "FAIL: se borró a sí mismo"; fail=1; }
+
+step "16. Eliminar una cuenta (Empleado, userId 5)"
+out=$(post "$SUPER_JAR" /api/admin/users '{"action":"delete","userId":5}')
+echo "$out"
+echo "$out" | grep -q '"ok":true' || { echo "FAIL delete user"; fail=1; }
+curl -s -b "$SUPER_JAR" "$BASE/posiciones?polla=2" | grep -q 'Empleado' && { echo "FAIL: Empleado sigue"; fail=1; } || echo "Empleado eliminado ✓"
+
+step "17. Eliminar una polla (Polla Oficina, id 2)"
+out=$(post "$SUPER_JAR" /api/admin/pollas '{"action":"delete","pollaId":2}')
+echo "$out"
+echo "$out" | grep -q '"ok":true' || { echo "FAIL delete polla"; fail=1; }
+curl -s -b "$SUPER_JAR" "$BASE/admin" | grep -q 'Polla Oficina' && { echo "FAIL: polla sigue"; fail=1; } || echo "Polla eliminada ✓"
+
+step "18. No se puede borrar la última polla"
+out=$(post "$SUPER_JAR" /api/admin/pollas '{"action":"delete","pollaId":1}')
+echo "$out"
+echo "$out" | grep -q '"ok":false' || { echo "FAIL: borró la última polla"; fail=1; }
+
 echo
 if [ "$fail" = "0" ]; then echo "SMOKE_OK"; else echo "SMOKE_FAIL"; exit 1; fi

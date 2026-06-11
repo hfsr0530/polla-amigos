@@ -89,3 +89,80 @@ export async function isPollaAdmin(userId: number, pollaId: number): Promise<boo
   )
   return rows.length > 0
 }
+
+export interface DeletePollaResult {
+  ok: boolean
+  error?: string
+}
+
+/**
+ * Elimina una polla completa (solo el superadmin). Cascada manual en una
+ * transacción porque las FKs no la declaran:
+ *  - los miembros que también juegan en OTRA polla se mueven a esa entrada
+ *  - los que solo jugaban aquí (no superadmin) se eliminan con sus datos
+ *  - se borran invitaciones, entradas, pronósticos y premios de la polla
+ * No permite borrar la última polla ni dejar al superadmin sin ninguna.
+ */
+export async function deletePolla(pollaId: number): Promise<DeletePollaResult> {
+  const db = await getDb()
+  return db.transaction(async (tx): Promise<DeletePollaResult> => {
+    const polla = (await tx.query('SELECT id FROM pollas WHERE id = $1', [pollaId]))[0]
+    if (!polla) return { ok: false, error: 'La polla no existe' }
+
+    const total = (
+      await tx.query<{ n: number }>('SELECT COUNT(*)::int AS n FROM pollas')
+    )[0].n
+    if (total <= 1) return { ok: false, error: 'No puedes borrar la única polla' }
+
+    // Miembros de la polla (cuentas con membresía en alguna de sus entradas)
+    const members = await tx.query<{ user_id: number; is_superadmin: number }>(
+      `SELECT DISTINCT u.id AS user_id, u.is_superadmin FROM users u
+       JOIN user_entries ue ON ue.user_id = u.id
+       JOIN entries e ON e.id = ue.entry_id
+       WHERE e.polla_id = $1`,
+      [pollaId]
+    )
+
+    const orphans: number[] = []
+    for (const m of members) {
+      const other = (
+        await tx.query<{ entry_id: number }>(
+          `SELECT ue.entry_id FROM user_entries ue
+           JOIN entries e ON e.id = ue.entry_id
+           WHERE ue.user_id = $1 AND e.polla_id <> $2 LIMIT 1`,
+          [m.user_id, pollaId]
+        )
+      )[0]
+      if (other) {
+        // Si su entrada activa está en esta polla, moverla a la otra membresía
+        await tx.query(
+          `UPDATE users SET entry_id = $1
+           WHERE id = $2 AND entry_id IN (SELECT id FROM entries WHERE polla_id = $3)`,
+          [other.entry_id, m.user_id, pollaId]
+        )
+      } else if (m.is_superadmin === 1) {
+        return {
+          ok: false,
+          error: 'No puedes borrar esta polla: dejaría al superadmin sin ninguna polla',
+        }
+      } else {
+        orphans.push(m.user_id)
+      }
+    }
+
+    // Invitaciones de la polla (referencian polla_id y entry_id, sin cascade)
+    await tx.query('DELETE FROM invites WHERE polla_id = $1', [pollaId])
+
+    // Cuentas que solo jugaban aquí: soltar admin_user_id y borrarlas
+    for (const id of orphans) {
+      await tx.query('UPDATE pollas SET admin_user_id = NULL WHERE admin_user_id = $1', [id])
+      await tx.query('DELETE FROM users WHERE id = $1', [id])
+    }
+
+    // Entradas de la polla (cascade: predictions, award_picks, user_entries)
+    await tx.query('DELETE FROM entries WHERE polla_id = $1', [pollaId])
+
+    await tx.query('DELETE FROM pollas WHERE id = $1', [pollaId])
+    return { ok: true }
+  })
+}

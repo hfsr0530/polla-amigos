@@ -139,6 +139,16 @@ export interface EntryWithMembers extends Entry {
   members: string[]
 }
 
+export interface EntryMemberAccount {
+  userId: number
+  displayName: string
+  isSuperadmin: boolean
+}
+
+export interface EntryWithMemberAccounts extends Entry {
+  members: EntryMemberAccount[]
+}
+
 export interface Invite {
   code: string
   pollaId: number

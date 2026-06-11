@@ -11,6 +11,7 @@ import {
 } from '@/features/awards/service'
 import { getAllTeams } from '@/features/matches/service'
 import { DEFAULT_RULES } from '@/features/scoring/rules'
+import { EntryNameEditor } from '@/features/entries/components/EntryNameEditor'
 import { LocalTime } from '@/shared/components/LocalTime'
 import { getT } from '@/shared/i18n/server'
 import type { TKey } from '@/shared/i18n/dictionary'
@@ -75,6 +76,11 @@ export default async function EntryPage({ params }: { params: Promise<{ id: stri
           </h1>
           {entry.kind === 'PAIR' && members.length > 0 && (
             <p className="mt-0.5 text-sm text-slate-400">{members.join(' + ')}</p>
+          )}
+          {isSelf && (
+            <div className="mt-1.5">
+              <EntryNameEditor entryId={entry.id} currentName={entry.name} />
+            </div>
           )}
         </div>
         {row && (

@@ -203,6 +203,10 @@ export const es = {
   'admin.pollas.joinFail': 'No se pudo',
   'admin.pollas.joinTitle': 'Participar en esta polla con tu cuenta',
   'admin.pollas.viewTable': 'Ver tabla',
+  'admin.pollas.delete': 'Eliminar',
+  'admin.pollas.deleteConfirm':
+    '¿Eliminar «{name}»? Se borrarán sus participantes, pronósticos e invitaciones. Esto no se puede deshacer.',
+  'admin.pollas.deleted': 'Polla eliminada ✓',
   'admin.invites.title': '🎟️ Invitaciones de «{name}»',
   'admin.invites.hint': 'Nadie entra sin invitación. Crea el código y comparte el link; las de pareja sirven para dos personas que comparten pronósticos y puntaje con usuarios separados.',
   'admin.invites.type': 'Tipo',
@@ -270,6 +274,17 @@ export const es = {
   'admin.validate.empty': 'Aún no hay picks de jugadores.',
   'admin.people.title': '👥 Participantes ({entries}) · Cuentas ({users})',
   'admin.people.superadmin': '(superadmin)',
+  'admin.people.hint': 'Renombra participantes o elimina cuentas. Acciones irreversibles.',
+  'admin.people.rename': 'Renombrar',
+  'admin.people.cancel': 'Cancelar',
+  'admin.people.deleteUser': 'Eliminar cuenta',
+  'admin.people.deleteUserConfirm':
+    '¿Eliminar la cuenta de {name}? Si es su única participación se borran también sus pronósticos. No se puede deshacer.',
+  'admin.people.deletedUser': 'Cuenta eliminada ✓',
+  'admin.people.renamed': 'Nombre actualizado ✓',
+  'admin.people.empty': 'Aún no hay participantes en esta polla.',
+  'entry.editName': 'Editar nombre',
+  'entry.nameSaved': 'Nombre actualizado ✓',
 
   // Etapas
   'stage.GROUP': 'Fase de grupos',
@@ -483,6 +498,10 @@ export const en: Record<TKey, string> = {
   'admin.pollas.joinFail': 'Could not join',
   'admin.pollas.joinTitle': 'Play in this polla with your account',
   'admin.pollas.viewTable': 'View table',
+  'admin.pollas.delete': 'Delete',
+  'admin.pollas.deleteConfirm':
+    'Delete "{name}"? Its participants, predictions and invites will be removed. This cannot be undone.',
+  'admin.pollas.deleted': 'Polla deleted ✓',
   'admin.invites.title': '🎟️ Invites for “{name}”',
   'admin.invites.hint': 'Nobody gets in without an invite. Create a code and share the link; pair invites work for two people sharing predictions and score with separate accounts.',
   'admin.invites.type': 'Type',
@@ -550,6 +569,17 @@ export const en: Record<TKey, string> = {
   'admin.validate.empty': 'No player picks yet.',
   'admin.people.title': '👥 Participants ({entries}) · Accounts ({users})',
   'admin.people.superadmin': '(super admin)',
+  'admin.people.hint': 'Rename participants or delete accounts. These actions cannot be undone.',
+  'admin.people.rename': 'Rename',
+  'admin.people.cancel': 'Cancel',
+  'admin.people.deleteUser': 'Delete account',
+  'admin.people.deleteUserConfirm':
+    "Delete {name}'s account? If it is their only entry, their predictions are removed too. This cannot be undone.",
+  'admin.people.deletedUser': 'Account deleted ✓',
+  'admin.people.renamed': 'Name updated ✓',
+  'admin.people.empty': 'No participants in this polla yet.',
+  'entry.editName': 'Edit name',
+  'entry.nameSaved': 'Name updated ✓',
 
   'stage.GROUP': 'Group stage',
   'stage.R32': 'Round of 32',
@@ -604,6 +634,14 @@ const API_ERRORS_EN: Record<string, string> = {
   'Equipo inválido': 'Invalid team',
   'El PIN debe ser de 4 a 6 dígitos': 'PIN must be 4 to 6 digits',
   'Elige un jugador de la lista': 'Pick a player from the list',
+  'No puedes eliminar tu propia cuenta': 'You cannot delete your own account',
+  'No puedes eliminar a un superadministrador': 'You cannot delete a super admin',
+  'El usuario no existe': 'That user does not exist',
+  'La polla no existe': 'That polla does not exist',
+  'La entrada no existe': 'That entry does not exist',
+  'No puedes borrar la única polla': 'You cannot delete the only polla',
+  'No puedes borrar esta polla: dejaría al superadmin sin ninguna polla':
+    'You cannot delete this polla: it would leave the super admin with no polla',
   'El nombre debe tener entre 2 y 40 caracteres': 'Name must be 2 to 40 characters',
   'El usuario debe tener 3-20 caracteres (letras, números, _ . -)':
     'Username must be 3-20 characters (letters, numbers, _ . -)',

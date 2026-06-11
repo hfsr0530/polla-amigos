@@ -465,6 +465,66 @@ export async function loginUser(username: string, pin: string): Promise<AuthResu
   }
 }
 
+export interface DeleteUserResult {
+  ok: boolean
+  error?: string
+}
+
+/**
+ * Elimina una cuenta (solo el superadmin). Reglas:
+ *  - no puede eliminarse a sí mismo ni a otro superadmin
+ *  - si la cuenta es la única de su entrada → se borra la entrada con sus
+ *    pronósticos y premios; si comparte entrada (pareja), solo se quita la cuenta
+ *  - si era admin de alguna polla, esa polla queda sin admin (el superadmin
+ *    sigue gestionándola)
+ */
+export async function deleteUser(targetId: number, actingId: number): Promise<DeleteUserResult> {
+  if (targetId === actingId) {
+    return { ok: false, error: 'No puedes eliminar tu propia cuenta' }
+  }
+  const db = await getDb()
+  return db.transaction(async (tx): Promise<DeleteUserResult> => {
+    const target = (
+      await tx.query<{ id: number; is_superadmin: number }>(
+        'SELECT id, is_superadmin FROM users WHERE id = $1',
+        [targetId]
+      )
+    )[0]
+    if (!target) return { ok: false, error: 'El usuario no existe' }
+    if (target.is_superadmin === 1) {
+      return { ok: false, error: 'No puedes eliminar a un superadministrador' }
+    }
+
+    // Entradas donde el target es el ÚNICO miembro (se borran con él)
+    const soloEntries = (
+      await tx.query<{ entry_id: number }>(
+        `SELECT ue.entry_id FROM user_entries ue
+         WHERE ue.user_id = $1
+           AND (SELECT COUNT(*) FROM user_entries x WHERE x.entry_id = ue.entry_id) = 1`,
+        [targetId]
+      )
+    ).map((r) => r.entry_id)
+
+    // pollas.admin_user_id no tiene cascade: hay que soltarla antes de borrar
+    await tx.query('UPDATE pollas SET admin_user_id = NULL WHERE admin_user_id = $1', [targetId])
+
+    // invites.entry_id tampoco: borrar invites de las entradas que se van
+    for (const eid of soloEntries) {
+      await tx.query('DELETE FROM invites WHERE entry_id = $1', [eid])
+    }
+
+    // Borrar la cuenta (cascade quita sus user_entries; en parejas, el otro queda)
+    await tx.query('DELETE FROM users WHERE id = $1', [targetId])
+
+    // Borrar las entradas que quedaron sin nadie (cascade: predictions, award_picks)
+    for (const eid of soloEntries) {
+      await tx.query('DELETE FROM entries WHERE id = $1', [eid])
+    }
+
+    return { ok: true }
+  })
+}
+
 export interface UserSummary {
   id: number
   displayName: string

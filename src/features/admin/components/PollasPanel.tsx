@@ -90,6 +90,32 @@ export function PollasPanel({ pollas, currentPollaId, myPollaIds }: PollasPanelP
     }
   }
 
+  async function removePolla(pollaId: number, name: string) {
+    if (!window.confirm(t('admin.pollas.deleteConfirm', { name }))) return
+    setBusy(true)
+    setMessage(null)
+    try {
+      const res = await fetch('/api/admin/pollas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', pollaId }),
+      })
+      const data = (await res.json()) as { ok: boolean; error?: string }
+      setMessage(
+        data.ok
+          ? t('admin.pollas.deleted')
+          : data.error
+            ? apiError(data.error)
+            : t('admin.pollas.joinFail')
+      )
+      router.refresh()
+    } catch {
+      setMessage(t('score.noConnection'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -169,6 +195,14 @@ export function PollasPanel({ pollas, currentPollaId, myPollaIds }: PollasPanelP
               >
                 {t('admin.pollas.viewTable')}
               </Link>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => removePolla(polla.id, polla.name)}
+                className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-400 transition-colors hover:border-red-500/50 hover:text-red-300 disabled:opacity-50"
+              >
+                {t('admin.pollas.delete')}
+              </button>
             </span>
           </li>
         ))}
