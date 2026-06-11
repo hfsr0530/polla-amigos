@@ -1,0 +1,30 @@
+{
+  "name": "polla-amigos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Polla del Mundial 2026 entre amigos — pronósticos, puntos y resultados en vivo",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "@neondatabase/serverless": "^0.10.4",
+    "jose": "^5.9.6",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.3",
+    "@types/node": "^22.10.10",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "tailwindcss": "^4.0.3",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.4"
+  }
+}
