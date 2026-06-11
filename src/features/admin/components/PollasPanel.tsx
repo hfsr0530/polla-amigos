@@ -144,20 +144,22 @@ export function PollasPanel({ pollas, currentPollaId, myPollaIds }: PollasPanelP
         {pollas.map((polla) => (
           <li
             key={polla.id}
-            className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm"
+            className="flex flex-col gap-2 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm sm:flex-row sm:flex-wrap sm:items-center"
           >
-            <span className="font-bold">
-              {polla.name}
-              {polla.id === currentPollaId && (
-                <span className="ml-1.5 text-xs font-normal text-emerald-400">
-                  {t('admin.pollas.yours')}
-                </span>
-              )}
-            </span>
-            <span className="text-xs text-slate-500">
-              {t('admin.pollas.stats', { entries: polla.entryCount, users: polla.userCount })}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span className="font-bold">
+                {polla.name}
+                {polla.id === currentPollaId && (
+                  <span className="ml-1.5 text-xs font-normal text-emerald-400">
+                    {t('admin.pollas.yours')}
+                  </span>
+                )}
+              </span>
+              <span className="text-xs text-slate-500">
+                {t('admin.pollas.stats', { entries: polla.entryCount, users: polla.userCount })}
+              </span>
+            </div>
+            <span className="text-xs text-slate-400 sm:min-w-0 sm:flex-1">
               {polla.adminName ? (
                 t('admin.pollas.admin', { name: polla.adminName })
               ) : polla.pendingAdminCode ? (
@@ -166,7 +168,7 @@ export function PollasPanel({ pollas, currentPollaId, myPollaIds }: PollasPanelP
                 <span className="italic">{t('admin.pollas.noAdmin')}</span>
               )}
             </span>
-            <span className="flex items-center gap-1.5">
+            <span className="flex flex-wrap items-center gap-1.5">
               {polla.pendingAdminCode && (
                 <button
                   type="button"

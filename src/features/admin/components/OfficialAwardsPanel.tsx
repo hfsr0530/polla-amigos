@@ -6,6 +6,7 @@ import { useApiError, useT } from '@/shared/i18n/I18nProvider'
 import type { TKey } from '@/shared/i18n/dictionary'
 import type { AwardKey } from '@/shared/types/domain'
 import { PLAYER_AWARDS, TEAM_AWARDS } from '@/shared/types/domain'
+import { PlayerCombobox } from '@/features/awards/components/PlayerCombobox'
 
 interface TeamOption {
   id: number
@@ -105,21 +106,20 @@ export function OfficialAwardsPanel({ teams, players, current }: OfficialAwardsP
                   ))}
                 </select>
               ) : (
-                <input
-                  aria-label={t(`award.${award}` as TKey)}
-                  list="players-catalog-admin"
-                  className={fieldClasses}
-                  placeholder={
-                    players.length === 0
-                      ? t('admin.officialAwards.unset')
-                      : t('awards.playerSearch')
-                  }
-                  value={values[award]}
-                  disabled={players.length === 0}
-                  maxLength={80}
-                  autoComplete="off"
-                  onChange={(e) => setValues((v) => ({ ...v, [award]: e.target.value }))}
-                />
+                <div className="min-w-0 flex-1">
+                  <PlayerCombobox
+                    id={`official-${award}`}
+                    items={players}
+                    value={values[award]}
+                    disabled={players.length === 0}
+                    placeholder={
+                      players.length === 0
+                        ? t('admin.officialAwards.unset')
+                        : t('awards.playerSearch')
+                    }
+                    onChange={(label) => setValues((v) => ({ ...v, [award]: label }))}
+                  />
+                </div>
               )}
               <button
                 type="button"
@@ -138,12 +138,6 @@ export function OfficialAwardsPanel({ teams, players, current }: OfficialAwardsP
           </div>
         )
       })}
-
-      <datalist id="players-catalog-admin">
-        {players.map((p) => (
-          <option key={p.id} value={p.label} />
-        ))}
-      </datalist>
     </div>
   )
 }

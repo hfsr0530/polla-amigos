@@ -5,6 +5,7 @@ import { useApiError, useT } from '@/shared/i18n/I18nProvider'
 import type { TKey } from '@/shared/i18n/dictionary'
 import type { AwardKey } from '@/shared/types/domain'
 import { PLAYER_AWARDS, TEAM_AWARDS } from '@/shared/types/domain'
+import { PlayerCombobox } from './PlayerCombobox'
 
 interface TeamOption {
   id: number
@@ -172,26 +173,25 @@ export function AwardsForm({ teams, players, initialPicks, points }: AwardsFormP
                   {t('awards.pts', { n: points[award] })}
                 </span>
               </label>
-              <div className="flex items-center gap-2">
-                <input
-                  id={`award-${award}`}
-                  list="players-catalog"
-                  className={fieldClasses}
-                  value={values[award]}
-                  disabled={players.length === 0}
-                  maxLength={80}
-                  placeholder={t('awards.playerSearch')}
-                  autoComplete="off"
-                  onChange={(e) => {
-                    setValues((v) => ({ ...v, [award]: e.target.value }))
-                    setStates((s) => ({ ...s, [award]: 'idle' }))
-                  }}
-                />
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <PlayerCombobox
+                    id={`award-${award}`}
+                    items={players}
+                    value={values[award]}
+                    disabled={players.length === 0}
+                    placeholder={t('awards.playerSearch')}
+                    onChange={(label) => {
+                      setValues((v) => ({ ...v, [award]: label }))
+                      setStates((s) => ({ ...s, [award]: 'idle' }))
+                    }}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => save(award)}
                   disabled={states[award] === 'saving' || players.length === 0}
-                  className="shrink-0 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-950 transition-colors hover:bg-emerald-400 disabled:opacity-60"
+                  className="shrink-0 rounded-lg bg-emerald-500 px-3 py-2.5 text-xs font-semibold text-slate-950 transition-colors hover:bg-emerald-400 disabled:opacity-60"
                 >
                   {states[award] === 'saving' ? '…' : t('score.save')}
                 </button>
@@ -200,13 +200,6 @@ export function AwardsForm({ teams, players, initialPicks, points }: AwardsFormP
             </div>
           ))}
         </div>
-
-        {/* Catálogo compartido por los 4 buscadores (filtra al escribir) */}
-        <datalist id="players-catalog">
-          {players.map((p) => (
-            <option key={p.id} value={p.label} />
-          ))}
-        </datalist>
       </section>
     </div>
   )

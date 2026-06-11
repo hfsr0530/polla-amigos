@@ -132,18 +132,20 @@ export function InvitesPanel({ invites, canInviteToMyEntry }: InvitesPanelProps)
               <li
                 key={invite.code}
                 className={cn(
-                  'flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 text-sm',
+                  'flex flex-col gap-2 rounded-xl border px-3 py-2 text-sm sm:flex-row sm:flex-wrap sm:items-center',
                   active ? 'border-slate-700 bg-slate-950/60' : 'border-slate-800 bg-slate-900/40 opacity-75'
                 )}
               >
-                <code className="font-mono text-base font-bold tracking-widest text-emerald-300">
-                  {invite.code}
-                </code>
-                <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-300">
-                  {invite.kind === 'PAIR' ? t('admin.invites.pairTag') : t('admin.invites.individualTag')}
-                </span>
-                {invite.label && <span className="text-xs text-slate-400">{invite.label}</span>}
-                <span className="min-w-0 flex-1 truncate text-xs text-slate-500">
+                <div className="flex flex-wrap items-center gap-2">
+                  <code className="font-mono text-base font-bold tracking-widest text-emerald-300">
+                    {invite.code}
+                  </code>
+                  <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-300">
+                    {invite.kind === 'PAIR' ? t('admin.invites.pairTag') : t('admin.invites.individualTag')}
+                  </span>
+                  {invite.label && <span className="text-xs text-slate-400">{invite.label}</span>}
+                </div>
+                <span className="text-xs text-slate-500 sm:min-w-0 sm:flex-1">
                   {invite.revoked
                     ? t('admin.invites.revoked')
                     : complete
@@ -152,7 +154,7 @@ export function InvitesPanel({ invites, canInviteToMyEntry }: InvitesPanelProps)
                         ? t('admin.invites.oneSlot', { names: invite.usedBy.join(' + ') })
                         : t('admin.invites.unused')}
                 </span>
-                <span className="flex items-center gap-1.5">
+                <span className="flex flex-wrap items-center gap-1.5">
                   {active && (
                     <button
                       type="button"
