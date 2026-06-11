@@ -29,7 +29,7 @@ export default async function AwardsPage() {
 
   const [t, locked, start, teams] = await Promise.all([
     getT(),
-    areAwardsLocked(),
+    areAwardsLocked(user.pollaId),
     getTournamentStartUtc(),
     getAllTeams(),
   ])

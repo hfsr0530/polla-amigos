@@ -74,7 +74,7 @@ export default async function MatchesPage({
     getEntryPredictions(user.entryId),
     getAllPredictions(user.pollaId),
     listEntriesWithMembers(user.pollaId),
-    areAwardsLocked(),
+    areAwardsLocked(user.pollaId),
     getEntryAwardPicks(user.entryId),
   ])
   const now = Date.now()

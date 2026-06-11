@@ -144,6 +144,16 @@ out=$(curl -s -X POST "$BASE/api/auth/login" -H 'Content-Type: application/json'
 echo "login con PIN cambiado: $out"
 echo "$out" | grep -q '"ok":true' || { echo "FAIL: el PIN cambiado no funciona"; fail=1; }
 
+step "13d. Habilitar edición de premios re-abre el formulario"
+before=$(curl -s -b "$SUPER_JAR" "$BASE/premios" | grep -o 'role="combobox"' | wc -l)
+echo "comboboxes del formulario antes: $before"
+post "$SUPER_JAR" /api/admin/awards-open '{"open":true}' | grep -q '"ok":true' || { echo "FAIL habilitar"; fail=1; }
+after=$(curl -s -b "$SUPER_JAR" "$BASE/premios" | grep -o 'role="combobox"' | wc -l)
+echo "comboboxes del formulario después de habilitar: $after"
+[ "$after" -ge 4 ] && echo "Formulario de premios abierto ✓" || { echo "FAIL: no se abrió el formulario"; fail=1; }
+# la guard: la jefa NO puede tocar los premios de la polla 1 (no es su polla)
+post "$SUPER_JAR" /api/admin/awards-open '{"open":false}' | grep -q '"ok":true' || { echo "FAIL cerrar"; fail=1; }
+
 step "14. Renombrar entrada (superadmin) y reflejarlo en posiciones"
 out=$(post "$SUPER_JAR" /api/entries '{"action":"rename","entryId":2,"name":"Los Galacticos"}')
 echo "$out"

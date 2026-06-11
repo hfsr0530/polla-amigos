@@ -6,16 +6,22 @@ interface PollaRow {
   id: number
   name: string
   admin_user_id: number | null
+  awards_open: number
 }
 
 function rowToPolla(r: PollaRow): Polla {
-  return { id: r.id, name: r.name, adminUserId: r.admin_user_id }
+  return {
+    id: r.id,
+    name: r.name,
+    adminUserId: r.admin_user_id,
+    awardsOpen: r.awards_open === 1,
+  }
 }
 
 export async function getPolla(id: number): Promise<Polla | null> {
   const db = await getDb()
   const rows = await db.query<PollaRow>(
-    'SELECT id, name, admin_user_id FROM pollas WHERE id = $1',
+    'SELECT id, name, admin_user_id, awards_open FROM pollas WHERE id = $1',
     [id]
   )
   return rows[0] ? rowToPolla(rows[0]) : null
@@ -24,9 +30,25 @@ export async function getPolla(id: number): Promise<Polla | null> {
 export async function listPollas(): Promise<Polla[]> {
   const db = await getDb()
   const rows = await db.query<PollaRow>(
-    'SELECT id, name, admin_user_id FROM pollas ORDER BY id'
+    'SELECT id, name, admin_user_id, awards_open FROM pollas ORDER BY id'
   )
   return rows.map(rowToPolla)
+}
+
+/** El admin habilita/cierra la edición de premios de una polla */
+export async function setAwardsOpen(pollaId: number, open: boolean): Promise<void> {
+  const db = await getDb()
+  await db.query('UPDATE pollas SET awards_open = $1 WHERE id = $2', [open ? 1 : 0, pollaId])
+}
+
+/** ¿La edición de premios está habilitada manualmente en esta polla? */
+export async function isAwardsOpen(pollaId: number): Promise<boolean> {
+  const db = await getDb()
+  const rows = await db.query<{ awards_open: number }>(
+    'SELECT awards_open FROM pollas WHERE id = $1',
+    [pollaId]
+  )
+  return rows[0]?.awards_open === 1
 }
 
 export interface PollaStats extends Polla {
@@ -47,7 +69,7 @@ export async function listPollasWithStats(): Promise<PollaStats[]> {
       pending_admin_code: string | null
     }
   >(
-    `SELECT p.id, p.name, p.admin_user_id,
+    `SELECT p.id, p.name, p.admin_user_id, p.awards_open,
             au.display_name AS admin_name,
             (SELECT COUNT(*)::int FROM entries e WHERE e.polla_id = p.id) AS entry_count,
             (SELECT COUNT(DISTINCT ue.user_id)::int FROM user_entries ue
@@ -78,7 +100,7 @@ export async function createPolla(name: string): Promise<Polla> {
     'INSERT INTO pollas (name, created_at) VALUES ($1, $2) RETURNING id',
     [trimmed, nowIso()]
   )
-  return { id: rows[0].id, name: trimmed, adminUserId: null }
+  return { id: rows[0].id, name: trimmed, adminUserId: null, awardsOpen: false }
 }
 
 export async function isPollaAdmin(userId: number, pollaId: number): Promise<boolean> {

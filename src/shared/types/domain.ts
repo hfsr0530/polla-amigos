@@ -118,6 +118,8 @@ export interface Polla {
   id: number
   name: string
   adminUserId: number | null
+  /** El admin habilitó la edición de premios (override del bloqueo por tiempo) */
+  awardsOpen: boolean
 }
 
 export type EntryKind = 'INDIVIDUAL' | 'PAIR'

@@ -53,7 +53,7 @@ export default async function EntryPage({ params }: { params: Promise<{ id: stri
   const visibleScores = scores.filter((s) => isSelf || now >= Date.parse(s.match.kickoffUtc))
   const played = visibleScores.filter((s) => s.prediction !== null)
 
-  const awardsVisible = isSelf || (await areAwardsLocked())
+  const awardsVisible = isSelf || (await areAwardsLocked(entry.pollaId))
   const picks = awardsVisible
     ? await getEntryAwardPicks(entryId)
     : new Map<AwardKey, never>()

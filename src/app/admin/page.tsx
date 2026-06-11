@@ -15,6 +15,7 @@ import { ManualResultForm } from '@/features/admin/components/ManualResultForm'
 import { OfficialAwardsPanel } from '@/features/admin/components/OfficialAwardsPanel'
 import { PickOverrideButtons } from '@/features/admin/components/PickOverrideButtons'
 import { ParticipantsPanel } from '@/features/admin/components/ParticipantsPanel'
+import { AwardsOpenToggle } from '@/features/admin/components/AwardsOpenToggle'
 import { getT } from '@/shared/i18n/server'
 import type { TKey } from '@/shared/i18n/dictionary'
 import { PLAYER_AWARDS, type AwardKey } from '@/shared/types/domain'
@@ -147,6 +148,12 @@ export default async function AdminPage() {
           invites={invites}
           canInviteToMyEntry={(await countEntryMembers(user.entryId)) < 2}
         />
+      </section>
+
+      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-5">
+        <h2 className="mb-1 text-base font-bold">{t('admin.awardsOpen.title')}</h2>
+        <p className="mb-3 text-xs text-slate-500">{t('admin.awardsOpen.hint')}</p>
+        <AwardsOpenToggle open={polla?.awardsOpen ?? false} />
       </section>
 
       {user.isSuperadmin && status && (

@@ -132,5 +132,7 @@ CREATE INDEX IF NOT EXISTS idx_players_team ON players(team_id);
 
 ALTER TABLE award_picks ADD COLUMN IF NOT EXISTS player_id INTEGER REFERENCES players(id);
 
-ALTER TABLE award_results ADD COLUMN IF NOT EXISTS player_id INTEGER REFERENCES players(id)
+ALTER TABLE award_results ADD COLUMN IF NOT EXISTS player_id INTEGER REFERENCES players(id);
+
+ALTER TABLE pollas ADD COLUMN IF NOT EXISTS awards_open INTEGER NOT NULL DEFAULT 0
 `

@@ -230,6 +230,14 @@ export const es = {
   'admin.invites.copied': 'Copiado ✓',
   'admin.invites.revoke': 'Revocar',
   'admin.invites.copyPrompt': 'Copia el link de invitación:',
+  'admin.awardsOpen.title': '🏆 Edición de premios',
+  'admin.awardsOpen.hint':
+    'Los premios se bloquean solos 10 minutos antes del primer partido. Habilítalo para que tu polla pueda entrar o editar sus premios igual.',
+  'admin.awardsOpen.statusOpen': 'Edición habilitada: tu polla puede entrar/editar premios ahora.',
+  'admin.awardsOpen.statusClosed':
+    'Edición según el horario (se bloquean 10 min antes del primer partido).',
+  'admin.awardsOpen.enable': 'Habilitar edición',
+  'admin.awardsOpen.disable': 'Volver al horario automático',
   'admin.sync.title': '📡 Resultados en vivo',
   'admin.sync.provider': 'Proveedor',
   'admin.sync.last': 'Último sync',
@@ -532,6 +540,14 @@ export const en: Record<TKey, string> = {
   'admin.invites.copied': 'Copied ✓',
   'admin.invites.revoke': 'Revoke',
   'admin.invites.copyPrompt': 'Copy the invite link:',
+  'admin.awardsOpen.title': '🏆 Awards entry',
+  'admin.awardsOpen.hint':
+    'Awards lock automatically 10 minutes before the first match. Enable this so your polla can still enter or edit their awards.',
+  'admin.awardsOpen.statusOpen': 'Editing enabled: your polla can enter/edit awards now.',
+  'admin.awardsOpen.statusClosed':
+    'Editing follows the schedule (locks 10 min before the first match).',
+  'admin.awardsOpen.enable': 'Enable editing',
+  'admin.awardsOpen.disable': 'Back to automatic schedule',
   'admin.sync.title': '📡 Live results',
   'admin.sync.provider': 'Provider',
   'admin.sync.last': 'Last sync',

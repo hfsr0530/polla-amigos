@@ -2,6 +2,7 @@ import 'server-only'
 import { getDb, nowIso } from '@/shared/db/client'
 import { normalizeName } from '@/shared/lib/utils'
 import { getTournamentStartUtc } from '@/features/matches/service'
+import { isAwardsOpen } from '@/features/pollas/service'
 import type { AwardKey, AwardPick, AwardResult } from '@/shared/types/domain'
 import { PLAYER_AWARDS, PREDICTION_LOCK_MS, TEAM_AWARDS } from '@/shared/types/domain'
 
@@ -27,8 +28,12 @@ function rowToPick(r: PickRow): AwardPick {
   }
 }
 
-/** Los premios cierran 10 minutos antes del primer partido del Mundial */
-export async function areAwardsLocked(now = new Date()): Promise<boolean> {
+/**
+ * Los premios cierran 10 minutos antes del primer partido del Mundial, salvo
+ * que el admin de la polla haya habilitado la edición manualmente (override).
+ */
+export async function areAwardsLocked(pollaId: number, now = new Date()): Promise<boolean> {
+  if (await isAwardsOpen(pollaId)) return false
   const start = await getTournamentStartUtc()
   if (!start) return false
   return now.getTime() >= Date.parse(start) - PREDICTION_LOCK_MS
@@ -63,11 +68,16 @@ export async function saveAwardPick(
   award: AwardKey,
   value: { teamId?: number; playerId?: number }
 ): Promise<SavePickResult> {
-  if (await areAwardsLocked()) {
+  const db = await getDb()
+  const entryRows = await db.query<{ polla_id: number }>(
+    'SELECT polla_id FROM entries WHERE id = $1',
+    [entryId]
+  )
+  const pollaId = entryRows[0]?.polla_id
+  if (!pollaId) return { ok: false, error: 'La entrada no existe' }
+  if (await areAwardsLocked(pollaId)) {
     return { ok: false, error: 'El torneo ya comenzó: los premios están cerrados' }
   }
-
-  const db = await getDb()
   if (TEAM_AWARDS.includes(award)) {
     const teamId = value.teamId
     if (!teamId || (await db.query('SELECT 1 FROM teams WHERE id = $1', [teamId])).length === 0) {
