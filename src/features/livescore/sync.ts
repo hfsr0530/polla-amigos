@@ -25,6 +25,9 @@ const TEAM_ALIASES: Record<string, string> = {
   'bosnia and herzegovina': 'bosnia herzegovina',
   'cote divoire': 'ivory coast',
   "cote d'ivoire": 'ivory coast',
+  // worldcup26 la nombra "Democratic Republic of the Congo", ESPN "Congo DR"
+  'democratic republic of the congo': 'congo dr',
+  'dr congo': 'congo dr',
 }
 
 /** Clave canónica para cruzar equipos entre proveedores */
